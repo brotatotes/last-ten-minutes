@@ -13,7 +13,7 @@ FACES = [('EBGaramond12-Regular.ttf', 'normal', 400), ('EBGaramond12-Italic.ttf'
 
 def woff2(path):
     f = TTFont(str(path))
-    opts = subset.Options(); opts.flavor = 'woff2'; opts.layout_features = ['kern', 'liga']; opts.name_IDs = ['*']
+    opts = subset.Options(); opts.flavor = 'woff2'; opts.layout_features = ['kern', 'liga', 'lnum']; opts.name_IDs = ['*']
     s = subset.Subsetter(opts); s.populate(text=TEXT); s.subset(f)
     buf = io.BytesIO(); f.flavor = 'woff2'; f.save(buf); return buf.getvalue()
 

@@ -24,7 +24,7 @@ function smooth(e0,e1,v){const u=clamp((v-e0)/(e1-e0),0,1);return u*u*(3-2*u);}
 const WORLD={x0:0,x1:22,y0:0,y1:11.5};
 const LAMPS=[[6.4,10.4],[12.3,10.4],[18.0,10.4],[8.2,5.1],[15.4,5.1]];
 const CLOCK=[11.0,7.4];
-const BENCH=[8.2,8.6];
+const BENCH=[9.2,9.8];
 const HALL={x0:0.4,x1:4.6,y0:4.9,y1:10.6};
 
 // ---------- static pieces ----------
@@ -84,7 +84,8 @@ function clockAt(x,y,t){const [a,b]=P(x,y,PZ),[c1,d1]=P(x,y,PZ+3.9);g.strokeStyl
   g.fillStyle='#16181c';g.beginPath();g.arc(c1,d1-r,r+4,0,7);g.fill();
   const fg=g.createRadialGradient(c1-5,d1-r-5,2,c1,d1-r,r);fg.addColorStop(0,'#fff6dc');fg.addColorStop(1,'#e2cfa0');g.fillStyle=fg;g.beginPath();g.arc(c1,d1-r,r,0,7);g.fill();
   g.strokeStyle='#2a2218';for(let i=0;i<12;i++){const an=i/12*Math.PI*2;g.lineWidth=i%3?1:2;g.beginPath();g.moveTo(c1+Math.sin(an)*r*0.78,d1-r-Math.cos(an)*r*0.78);g.lineTo(c1+Math.sin(an)*r*0.92,d1-r-Math.cos(an)*r*0.92);g.stroke();}
-  const mins=50+t/60, mA=mins/60*Math.PI*2, hA=(9+mins/60)/12*Math.PI*2, sA=(t%60)/60*Math.PI*2;g.lineCap='round';
+  const st=(typeof STORY!=='undefined')?STORY.stationSeconds(t):t; // the station clock keeps its own time
+  const mins=50+st/60, mA=mins/60*Math.PI*2, hA=(9+mins/60)/12*Math.PI*2, sA=(st%60)/60*Math.PI*2;g.lineCap='round';
   g.lineWidth=2.6;g.beginPath();g.moveTo(c1,d1-r);g.lineTo(c1+Math.sin(hA)*r*0.5,d1-r-Math.cos(hA)*r*0.5);g.stroke();
   g.lineWidth=1.6;g.beginPath();g.moveTo(c1,d1-r);g.lineTo(c1+Math.sin(mA)*r*0.8,d1-r-Math.cos(mA)*r*0.8);g.stroke();
   g.strokeStyle='#9a2a1e';g.lineWidth=0.8;g.beginPath();g.moveTo(c1,d1-r);g.lineTo(c1+Math.sin(sA)*r*0.85,d1-r-Math.cos(sA)*r*0.85);g.stroke();
@@ -167,15 +168,29 @@ function drawHall(t,clerkIn){
   const {x0,x1,y0,y1}=HALL,z0=PZ,z1=PZ+3.1;
   box(x0,x1,y0,y1,z0,z1,'#2e2926','#3d3431','#302926','#1e1a18');
   g.strokeStyle='rgba(20,15,12,0.35)';for(let z=z0+0.25;z<z1;z+=0.25){const a=P(x0,y1,z),b=P(x1,y1,z),d=P(x1,y0,z);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.lineTo(d[0],d[1]);g.stroke();}
-  // door on +x face
-  xq(x1+0.002,8.2,9.0,z0,z0+1.9,'#f0a850');xq(x1+0.003,8.1,8.2,z0,z0+2.0,'#1a1412');xq(x1+0.003,9.0,9.1,z0,z0+2.0,'#1a1412');
-  {const [a,b]=P(x1,8.6,z0+1.0);glow(a,b,110,'255,170,80',0.4);}
+  const S_=(typeof STORY!=='undefined')?STORY:null;
+  // booking-hall door onto the platform, on the +x face (always open)
+  xq(x1+0.002,7.6,8.4,z0,z0+1.9,'#f0a850');xq(x1+0.003,7.5,7.6,z0,z0+2.0,'#1a1412');xq(x1+0.003,8.4,8.5,z0,z0+2.0,'#1a1412');
+  {const [a,b]=P(x1,8.0,z0+1.0);glow(a,b,110,'255,170,80',0.4);}
+  // ladies' waiting-room door, +x face: dark panelled door, lit gap when open
+  {const open=S_?S_.doorOpen('waiting',t):false;
+   xq(x1+0.002,9.5,10.2,z0,z0+1.85,open?'#e8a04a':'#2a1c14');
+   if(open){xq(x1+0.003,9.5,9.62,z0,z0+1.85,'#1d130d');const [a,b]=P(x1,9.85,z0+0.9);glow(a,b,70,'255,170,80',0.35);}
+   else{xq(x1+0.003,9.6,10.1,z0+1.0,z0+1.7,'#35251a');xq(x1+0.003,9.6,10.1,z0+0.2,z0+0.9,'#35251a');}
+   xq(x1+0.003,9.42,9.5,z0,z0+1.95,'#120d0a');xq(x1+0.003,10.2,10.28,z0,z0+1.95,'#120d0a');
+   xq(x1+0.004,9.45,10.25,z0+2.0,z0+2.28,'#1d2a24');
+   const [px,py]=P(x1+0.004,9.45,z0+2.28);g.save();g.transform(C30,-S30,0,1,px,py);g.fillStyle='#d8c690';g.font='600 9px "EB Garamond", Garamond, Georgia, serif';g.textAlign='center';g.fillText('LADIES',(0.8*S)/2,10);g.restore();}
   // ticket window on +x face
-  xq(x1+0.002,6.0,7.0,z0+1.0,z0+2.1,'#e8a04a');
-  if(clerkIn){const [a,b]=P(x1,6.5,z0+1.0);g.fillStyle='rgba(30,16,10,0.9)';g.beginPath();g.ellipse(a,b-30,8,9,0,0,7);g.fill();g.fillRect(a-12,b-21,24,21);g.fillRect(a-13,b-44,26,4);}
-  {const [a,b]=P(x1,6.5,z0+1.5);glow(a,b,70,'255,170,80',0.3);}
-  // front window on +y face
-  yq(1.4,3.4,y1+0.002,z0+1.0,z0+2.1,'#d8923e');{const [a,b]=P(2.4,y1,z0+1.5);glow(a,b,80,'255,170,80',0.3);}
+  xq(x1+0.002,5.4,6.4,z0+1.0,z0+2.1,'#e8a04a');
+  if(clerkIn){const [a,b]=P(x1,5.9,z0+1.0);g.fillStyle='rgba(30,16,10,0.9)';g.beginPath();g.ellipse(a,b-30,8,9,0,0,7);g.fill();g.fillRect(a-12,b-21,24,21);g.fillRect(a-13,b-44,26,4);}
+  {const [a,b]=P(x1,5.9,z0+1.5);glow(a,b,70,'255,170,80',0.3);}
+  // front window and street door on the +y face
+  yq(0.9,2.4,y1+0.002,z0+1.0,z0+2.1,'#d8923e');{const [a,b]=P(1.65,y1,z0+1.5);glow(a,b,70,'255,170,80',0.28);}
+  {const open=S_?S_.doorOpen('street',t):false;
+   yq(2.8,3.6,y1+0.002,z0,z0+1.9,open?'#e8a04a':'#2a1c14');
+   if(open){const [a,b]=P(3.2,y1,z0+0.9);glow(a,b,80,'255,170,80',0.35);}else{yq(2.9,3.5,y1+0.003,z0+1.0,z0+1.75,'#35251a');yq(2.9,3.5,y1+0.003,z0+0.2,z0+0.9,'#35251a');}
+   yq(2.72,2.8,y1+0.003,z0,z0+2.0,'#120d0a');yq(3.6,3.68,y1+0.003,z0,z0+2.0,'#120d0a');
+   const [a,b]=P(3.2,y1+0.3,z0+2.25);g.fillStyle='#ffcf82';g.fillRect(a-4,b-6,8,8);glow(a,b-2,60,'255,178,90',0.4);}
   // sign on +x face
   xq(x1+0.004,5.4,9.8,z0+2.35,z0+2.85,'#1d2a24');
   {const [px,py]=P(x1+0.004,5.4,z0+2.85);g.save();g.transform(C30,-S30,0,1,px,py);g.fillStyle='#d8c690';g.font='600 15px "EB Garamond", Garamond, Georgia, serif';g.textAlign='center';g.fillText('ASHCOMBE',(4.4*S)/2,17);g.restore();}
@@ -186,7 +201,7 @@ function drawHall(t,clerkIn){
   poly([P(xm,y0-0.2,zr),P(x1+0.3,y0-0.2,z1),P(x1+0.3,y1+0.2,z1),P(xm,y1+0.2,zr)],'#2a2f37');
   g.strokeStyle='rgba(10,12,15,0.5)';for(let u=0.1;u<1;u+=0.1){const a=P(xm+(x1+0.3-xm)*u,y0-0.2,zr-(zr-z1)*u),b=P(xm+(x1+0.3-xm)*u,y1+0.2,zr-(zr-z1)*u);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();}
   box(1.2,1.7,6.0,6.5,zr-0.8,zr+0.5,'#2b2522','#3a302b','#2c2421');
-  {const [a,b]=P(x1+0.2,8.6,z0+2.2);g.fillStyle='#ffcf82';g.fillRect(a-5,b-8,10,10);glow(a,b-3,90,'255,178,90',0.5);}
+  {const [a,b]=P(x1+0.2,8.0,z0+2.2);g.fillStyle='#ffcf82';g.fillRect(a-5,b-8,10,10);glow(a,b-3,90,'255,178,90',0.5);}
 }
 
 // ---------- steam ----------

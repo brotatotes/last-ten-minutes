@@ -5,34 +5,91 @@
 <style>
 /*FONTFACE*/
 html,body{margin:0;height:100%;background:#06080c;color:#e9dcc0;font-family:"EB Garamond",Garamond,Georgia,serif;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-body.ended #bar,body.ended #title,body.ended #hint,body.ended #follow{visibility:hidden}
+body.ended #bar,body.ended #title,body.ended #hint,body.ended #stack,body.ended #nbbtn,body.ended #ansbtn{visibility:hidden}
 #scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #title{position:fixed;left:18px;top:10px;pointer-events:none;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.8)}
 #title h1{margin:0;font-style:italic;font-weight:400;font-size:clamp(22px,3.2vw,38px)}
 #clock{font-size:clamp(17px,2vw,22px);opacity:.8}
-#bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,rgba(4,5,8,.92),rgba(4,5,8,.55) 70%,rgba(4,5,8,0));display:flex;flex-direction:column;gap:6px}
+#bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,rgba(4,5,8,.95),rgba(4,5,8,.8) 60%,rgba(4,5,8,0));display:flex;flex-direction:column;gap:6px}
 #row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
 button{font-family:inherit;font-size:18px;color:#e9dcc0;background:rgba(40,46,58,.85);border:1px solid rgba(233,220,192,.35);border-radius:8px;padding:6px 12px;min-width:44px;min-height:40px;cursor:pointer}
 button:focus-visible{outline:2px solid #e8a64e}
 #play{min-width:78px}
 #time{width:100%;accent-color:#b3261e;height:28px;margin:0}
-#ticks{display:flex;justify-content:space-between;font-size:15px;opacity:.7;padding:0 2px}
-#follow{position:fixed;left:50%;transform:translateX(-50%);top:12px;max-width:min(92vw,560px);background:rgba(10,12,18,.82);border:1px solid rgba(233,220,192,.3);border-radius:10px;padding:8px 14px;text-align:center;display:none;font-size:18px}
+#ticks{display:flex;justify-content:space-between;font-size:15px;opacity:.86;padding:0 2px}
+#stack{position:fixed;left:50%;transform:translateX(-50%);top:12px;width:min(92vw,560px);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:2}
+#follow{box-sizing:border-box;max-width:100%;background:rgba(10,12,18,.82);border:1px solid rgba(233,220,192,.3);border-radius:10px;padding:8px 14px;text-align:center;display:none;font-size:18px}
 #follow b{font-weight:600}
-#hint{position:fixed;right:16px;top:14px;font-size:15px;opacity:.6;text-align:right;pointer-events:none;max-width:40vw}
-#endcard{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,5,8,.72)}
-#endcard .card{box-sizing:border-box;max-height:92vh;overflow-y:auto;margin:0 12px;background:#12161f;border:1px solid rgba(233,220,192,.35);border-radius:12px;padding:20px 22px;max-width:min(92vw,520px);font-size:19px}
-#endcard h2{margin:0 0 10px;font-style:italic;font-weight:400;font-size:26px}
-#endcard .opts{display:flex;flex-direction:column;gap:8px;margin:12px 0}
-#endcard .opts button{text-align:left}
-@media (max-width:600px){#hint{display:none}#follow{top:auto;bottom:130px}button{font-size:17px;padding:6px 10px}}
-@media (max-height:450px){#hint{display:none}#title h1{font-size:20px}#bar{padding:4px 10px}#ticks{display:none}#follow{top:8px;font-size:16px}}
+#hint{position:fixed;right:16px;top:14px;font-size:15px;opacity:.78;text-align:right;pointer-events:none;max-width:40vw}
+#speech{box-sizing:border-box;max-width:100%;background:rgba(233,220,192,.93);color:#1a1510;border-radius:10px;padding:8px 14px;font-size:19px;font-style:italic;display:none;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+#speech b{font-style:normal;font-weight:600}
+#toast{box-sizing:border-box;background:rgba(10,12,18,.9);border:1px solid rgba(232,166,78,.6);border-radius:8px;padding:6px 12px;font-size:17px;display:none;max-width:90vw;text-align:center;pointer-events:none}
+#nbbtn{position:fixed;right:14px;top:62px}
+#notebook{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,5,8,.72);z-index:5}
+#notebook .nbcard{box-sizing:border-box;width:min(94vw,560px);max-height:calc(100vh - 170px);display:flex;flex-direction:column;background:#12161f;border:1px solid rgba(233,220,192,.35);border-radius:12px;padding:14px 16px}
+#notebook .nbhead{display:flex;justify-content:space-between;align-items:center}
+#notebook h2{margin:0;font-style:italic;font-weight:400;font-size:26px}
+#nblist{font-variant-numeric:lining-nums;overflow-y:auto;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);padding-bottom:24px;margin-top:8px;-webkit-user-select:text;user-select:text}
+#nblist .entry{border-top:1px solid rgba(233,220,192,.18);padding:8px 0;font-size:18px;line-height:1.35}
+#nblist .eh{font-weight:400;color:#e8c98e;margin-bottom:3px}
+#nblist .goto{font-variant-numeric:lining-nums;font-size:16px;min-height:34px;padding:3px 10px;margin-top:6px}
+#nbcount{font-size:15px;opacity:.7}
+#nblist .empty{opacity:.75;font-size:18px}
+#ansbtn{position:fixed;right:14px;top:110px}
+#ansbtn.locked{opacity:.55;cursor:default}
+#answers .aset.locked h3{opacity:.7}
+#answers .lockednote{font-style:italic;opacity:.8;margin:4px 0 6px}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,5,8,.86);z-index:6}
+.modal .card{box-sizing:border-box;width:min(94vw,680px);max-height:calc(100vh - 40px);overflow-y:auto;background:#12161f;border:1px solid rgba(233,220,192,.35);border-radius:12px;padding:18px 20px;font-size:19px;line-height:1.4}
+.modal h2{margin:0 0 8px;font-style:italic;font-weight:400;font-size:27px}
+.modal h3{margin:14px 0 6px;font-weight:600;font-size:19px}
+.modal p{margin:0 0 10px}
+.modal .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+button.primary{background:rgba(120,36,30,.9);border-color:rgba(232,166,78,.6)}
+#intro ul.cast{margin:0;padding-left:18px;font-size:17px}
+#intro ul.cast li{margin:2px 0}
+#answers .card{display:flex;flex-direction:column;overflow:hidden;padding:14px 16px;font-variant-numeric:lining-nums}
+#answers .ahead{display:flex;justify-content:space-between;align-items:center}
+#answers .ahead h2{margin:0}
+#answers .note{font-size:16px;opacity:.8;margin:4px 0 6px}
+#answers .abody{overflow-y:auto;padding-right:4px;padding-top:18px;padding-bottom:22px;-webkit-mask-image:linear-gradient(to bottom,transparent,transparent 4px,#000 26px,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,transparent,transparent 4px,#000 26px,#000 calc(100% - 26px),transparent)}
+#answers .aset{border-top:1px solid rgba(233,220,192,.2);padding:6px 0 10px}
+#answers .aset.solved h3::after{content:" \00b7  solved";color:#8fd49a;font-weight:400;font-style:italic}
+#answers .aset.solved select{border-color:#6fb07a;color:#bfe8c5}
+#answers .q{margin:8px 0 10px}
+#answers .sent{line-height:2.1}
+#answers .nw{white-space:nowrap}
+#answers .nw select{margin-right:0}
+#answers select:disabled{opacity:1}
+#answers .qn{font-weight:400;color:#e8c98e;margin-right:2px}
+select{margin:0 3px;font-family:inherit;font-variant-numeric:lining-nums;font-size:18px;color:#e9dcc0;background:#1d2330;border:1px solid rgba(233,220,192,.45);border-radius:6px;padding:3px 6px;min-height:36px;max-width:100%}
+select:focus-visible{outline:2px solid #e8a64e}
+#answers .hints{margin:2px 0 4px;padding-left:22px;font-size:17px;font-style:italic;color:#e8c98e}
+#answers .hints{list-style:none;padding-left:4px}
+#answers .hints li::before{content:"Hint " counter(list-item) ". ";font-style:normal;font-variant-numeric:lining-nums}
+#answers button.hint{font-size:15px;min-height:32px;padding:2px 10px}
+#answers .afoot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px}
+#answers .status{font-size:18px;color:#e8c98e}
+#answers .aset.solved .status{color:#8fd49a}
+#answers .linkish{margin:8px 0 2px;font-size:16px;background:none;border:none;text-decoration:underline;padding:4px 0}
+#finale{position:fixed;inset:0;display:none;z-index:7;pointer-events:none}
+#finale .shade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(2,3,5,.95),rgba(2,3,5,.35) 55%,rgba(2,3,5,.6));opacity:.15}
+#finale .ftext{position:absolute;left:50%;bottom:7vh;transform:translateX(-50%);box-sizing:border-box;width:min(92vw,640px);padding:14px 18px;border-radius:12px;background:rgba(6,8,12,.72);text-align:center;font-size:clamp(19px,2.2vw,24px);font-style:italic;text-shadow:0 1px 4px #000,0 0 14px #000;pointer-events:auto}
+#finale .ftext p,#finale .ftext .row{opacity:0;transition:opacity 1.6s ease}
+#finale.show .ftext p,#finale.show .ftext .row{opacity:1}
+#finale .row{display:flex;justify-content:center;margin-top:10px}
+@media (prefers-reduced-motion:reduce){#finale .ftext p,#finale .ftext .row{transition:none}}
+@media (max-width:600px){#ansbtn{top:60px;right:10px;font-size:16px}.modal .card{font-size:18px;padding:14px}select{font-size:17px}#stack{top:auto;bottom:128px;flex-direction:column-reverse}#speech{font-size:18px}#follow{font-size:17px}#nbbtn{top:10px;right:10px;font-size:16px}#hint{display:none}button{font-size:17px;padding:6px 10px}}
+@media (max-height:450px){#hint{display:none}#title h1{font-size:20px}#bar{padding:4px 10px}#ticks{display:none}#stack{top:8px}#follow{font-size:16px}}
 </style></head>
 <body>
 <canvas id="scene" aria-label="The station platform"></canvas>
 <div id="title"><h1>The Last Ten Minutes</h1><div id="clock">9:50:00 p.m.</div></div>
 <div id="hint">Drag to look around. Tap a person to follow them.<br>Space plays, arrows step.</div>
-<div id="follow" role="status" aria-live="polite"></div>
+<div id="stack"><div id="follow" role="status" aria-live="polite"></div><div id="speech" aria-live="polite"></div><div id="toast" role="status"></div></div>
+<button id="nbbtn" aria-label="Open your notebook">Notebook (0)</button>
+<button id="ansbtn" aria-label="Answer the questions">Answer</button>
+<div id="notebook" role="dialog" aria-label="Your notebook"><div class="nbcard"><div class="nbhead"><div><h2>Notebook</h2><div id="nbcount"></div></div><button id="nbclose">Close</button></div><div id="nblist"></div></div></div>
 <div id="bar">
   <input id="time" type="range" min="0" max="600" step="0.1" value="0" aria-label="Time from 9:50 to 10:00 p.m.">
   <div id="ticks"><span>9:50</span><span>9:52</span><span>9:54</span><span>9:56</span><span>9:58</span><span>10:00</span></div>
@@ -45,8 +102,14 @@ button:focus-visible{outline:2px solid #e8a64e}
     <button id="zin" aria-label="Zoom in">+</button>
   </div>
 </div>
-<div id="endcard" role="dialog" aria-modal="true"></div>
+<div id="endcard" class="modal" role="dialog" aria-modal="true" aria-label="The train has gone"></div>
+<div id="answers" class="modal" role="dialog" aria-modal="true" aria-label="Your answers"></div>
+<div id="intro" class="modal" role="dialog" aria-modal="true" aria-label="The case"></div>
+<div id="finale" aria-live="polite"></div>
+<script src="story.js"></script>
 <script src="scene.js"></script>
 <script src="characters.js"></script>
+<script src="clues.js"></script>
+<script src="answers.js"></script>
 <script src="app.js"></script>
 </body></html>

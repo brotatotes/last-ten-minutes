@@ -3,76 +3,23 @@
 'use strict';
 (function(){
 const A=LTM.API,PZ=LTM.PZ;
-// route keyframes: [t, x, y, action]. Position interpolates linearly; action shown is the segment's.
-const CHARS=[
- {id:'evelyn',name:'Evelyn Hart',desc:'the woman in the red coat',look:{coat:'#b3261e',hat:'cloche',hatCol:'#7a1712',skin:'#8a6a55',h:84,w:22},
-  hiddenBefore:40,hiddenAfter:525,
-  route:[[0,3.9,8.6,'Inside the booking hall'],[40,5.0,8.6,'Steps out of the booking hall'],[62,5.2,9.7,'Hands her case to the porter'],
-   [92,5.2,9.7,'Walks to the clock'],[130,10.4,8.0,'Waits under the clock, checking her watch'],[240,10.4,8.0,'Crosses to the man in the grey hat'],
-   [252,11.6,6.6,'Talks quietly with the man in the grey hat'],[330,11.6,6.6,'Walks to the platform edge'],[348,12.8,5.4,'Watches the line for the train crew'],
-   [470,12.8,5.4,'Walks to the front carriage'],[515,13.9,5.0,'Boards the front carriage'],[525,13.9,5.0,'Aboard the front carriage']]},
- {id:'harrow',name:'Mr. Harrow',desc:'the man in the grey hat',look:{coat:'#3c3f45',hat:'fedora',hatCol:'#15171b',h:90,w:23},
-  hiddenAfter:548,
-  route:[[0,8.2,9.0,'Reads the evening paper on the bench'],[110,8.2,9.0,'Folds his paper and picks up his case'],[118,8.2,9.0,'Takes his case to the porter'],
-   [150,7.2,10.6,'Hands his case to the porter'],[165,7.2,10.6,'Walks toward the clock'],[235,12.7,6.9,'Waits near the clock'],
-   [252,12.7,6.9,'Talks quietly with the woman in the red coat'],[330,12.7,6.9,'Walks to the platform edge'],[348,15.4,6.3,'Stands at the edge, hands in pockets'],
-   [505,15.4,6.3,'Checks his watch and walks to the rear carriage'],[542,6.7,5.0,'Boards the rear carriage'],[548,6.7,5.0,'Aboard the rear carriage']]},
- {id:'porter',name:'Albert',desc:'the porter',look:{coat:'#26303d',hat:'cap',h:86,w:23},
-  route:[[0,7.5,9.75,'Waits by his trolley'],[62,7.5,9.75,'Takes the woman\'s case'],[92,7.5,9.75,'Waits by his trolley'],[150,7.5,9.75,'Takes the man\'s case'],
-   [165,7.5,9.75,'Waits by his trolley'],[200,7.5,9.75,'Wheels the trolley up the platform'],[260,12.2,8.7,'Waits by his trolley'],
-   [372,12.2,8.7,'Tidies the luggage on his trolley'],[392,12.2,8.7,'Waits by his trolley'],
-   [430,12.2,8.7,'Carries a case to the front carriage'],[460,13.6,5.1,'Loads a case into the front carriage'],[466,13.6,5.1,'Walks back to his trolley'],
-   [482,12.2,8.7,'Carries a case to the rear carriage'],[515,7.0,5.1,'Loads a case into the rear carriage'],[521,7.0,5.1,'Walks back to his trolley'],
-   [560,12.2,8.7,'Leans on his trolley, watching the train']]},
- {id:'dunn',name:'Mr. Dunn',desc:'the ticket clerk',look:{coat:'#2d2a33',hat:'cap',hatCol:'#101318',h:82,w:21},
-  hiddenBefore:480,
-  route:[[0,3.9,6.5,'Behind the ticket window'],[480,5.0,8.6,'Steps out of the booking hall'],[486,5.0,8.6,'Walks to the clock'],
-   [512,10.4,8.3,'Compares his watch with the clock'],[555,10.4,8.3,'Walks to the engine'],[585,17.4,5.1,'Raises the green lamp for the driver'],[600,17.4,5.1,'Raises the green lamp for the driver']]},
-];
-const BYID={};CHARS.forEach(c=>BYID[c.id]=c);
-function seg(c,t){const r=c.route;let i=0;while(i<r.length-1&&t>=r[i+1][0]) i++;return i;}
-function posOf(c,t){const r=c.route,i=seg(c,t);if(i>=r.length-1) return [r[i][1],r[i][2],false,r[i][3]];
-  const a=r[i],b=r[i+1],u=A.clamp((t-a[0])/(b[0]-a[0]),0,1);const x=a[1]+(b[1]-a[1])*u,y=a[2]+(b[2]-a[2])*u;
-  const moving=(a[1]!==b[1]||a[2]!==b[2]);return [x,y,moving,a[3],b[1]-a[1],b[2]-a[2]];}
-function visible(c,t){return !(c.hiddenBefore!==undefined&&t<c.hiddenBefore)&&!(c.hiddenAfter!==undefined&&t>=c.hiddenAfter);}
-
-// trolley: origin (x,y) of its box
-function trolleyPos(t){const u=A.smooth(200,260,t);return [5.6+(12.6-5.6)*u,9.3+(8.2-9.3)*u];}
-const CASE_RED={col:'#8a6a3e',strap:'#b3261e',owner:'evelyn'},CASE_DARK={col:'#3b2a1c',strap:null,owner:'harrow'};
-function slotPos(s,tr){return s===1?[tr[0]+0.5,tr[1]+0.45]:[tr[0]+1.22,tr[1]+0.45];}
-// returns list of {c:case, x,y,z}
-function cases(t){
-  const tr=trolleyPos(t),out=[],por=posOf(BYID.porter,t),ev=posOf(BYID.evelyn,t),ha=posOf(BYID.harrow,t);
-  const hand=(p)=>[p[0]+0.35,p[1]+0.1,PZ+0.35];
-  // red-strap case
-  if(t<62){ if(t>=40) out.push({c:CASE_RED,p:hand(ev)}); else {} }
-  else if(t<68){out.push({c:CASE_RED,p:hand(ev)});}
-  else if(t<372){const s=slotPos(1,tr);out.push({c:CASE_RED,p:[s[0],s[1],PZ+0.35]});}
-  // dark case
-  if(t<150){out.push({c:CASE_DARK,p:t<118?[8.9,9.4,PZ]:hand(ha)});}
-  else if(t<156){out.push({c:CASE_DARK,p:hand(ha)});}
-  else if(t<372){const s=slotPos(2,tr);out.push({c:CASE_DARK,p:[s[0],s[1],PZ+0.35]});}
-  // the swap, 372 to 392
-  if(t>=372&&t<392){
-    const s1=slotPos(1,tr),s2=slotPos(2,tr),side=[tr[0]+0.9,tr[1]+1.25];
-    const lerp=(a,b,u)=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u];
-    let red,dark;
-    if(t<379){const u=A.smooth(372,379,t);red=[...lerp(s1,side,u),PZ+0.35-0.35*u+0.3*Math.sin(u*Math.PI)];dark=[s2[0],s2[1],PZ+0.35];}
-    else if(t<385){const u=A.smooth(379,385,t);red=[side[0],side[1],PZ];dark=[...lerp(s2,s1,u),PZ+0.35+0.3*Math.sin(u*Math.PI)];}
-    else{const u=A.smooth(385,392,t);red=[...lerp(side,s2,u),PZ+0.35*u+0.3*Math.sin(u*Math.PI)];dark=[s1[0],s1[1],PZ+0.35];}
-    out.push({c:CASE_RED,p:red},{c:CASE_DARK,p:dark});
-  }
-  if(t>=392){
-    // slot 1 now holds the dark case, slot 2 the red-strapped one
-    if(t<430){const s=slotPos(1,tr);out.push({c:CASE_DARK,p:[s[0],s[1],PZ+0.35]});}
-    else if(t<462){out.push({c:CASE_DARK,p:hand(por)});}
-    if(t<482){const s=slotPos(2,tr);out.push({c:CASE_RED,p:[s[0],s[1],PZ+0.35]});}
-    else if(t<517){out.push({c:CASE_RED,p:hand(por)});}
-  }
-  return out;
-}
+const S=STORY;
+// Every person, case and prop comes from the story script (story.js). Nothing here decides who is where.
+const CHARS=S.PEOPLE;
+const BYID=S.BYID;
+function posOf(c,t){const p=S.pos(c.id,t),m=S.moving(c.id,t);return [p[0],p[1],!!m,S.action(c.id,t),m?m[0]:0,m?m[1]:0];}
+function visible(c,t){return S.visible(c.id,t);}
+function trolleyPos(t){return S.trolley(t);}
+const CASE_COL={evelyn:'#8a6a3e',harrow:'#3b2a1c'};
+// returns list of {id, c:{col,strap,tag}, p:[x,y,z]}
+function cases(t){const out=[];const sw=S.strapWhere(t);
+  for(const id of ['evelyn','harrow']){const st=S.caseState(id,t);if(st.where==='hidden'||st.where==='carriage') continue;
+    let z=PZ;if(st.where==='trolley'||st.where==='hand') z=PZ+0.35;
+    out.push({id,c:{col:CASE_COL[id],strap:sw==='case:'+id?'#b3261e':null,tag:id==='harrow'},p:[st.x,st.y,z],where:st.where});}
+  return out;}
 function drawCase(k){const [x,y,z]=k.p,c=k.c;A.box(x-0.28,x+0.28,y-0.2,y+0.2,z,z+0.34,shade(c.col,1.15),c.col,shade(c.col,0.75));
   if(c.strap) A.box(x-0.05,x+0.05,y-0.21,y+0.21,z,z+0.345,c.strap,c.strap,'#7a1712');
+  if(c.tag){const [a,b]=A.P(x+0.28,y+0.1,z+0.2);A.g.fillStyle='#d8cfb4';A.g.fillRect(a-2,b-3,5,7);}
   A.box(x-0.08,x+0.08,y-0.02,y+0.02,z+0.34,z+0.4,'#6a5a3a','#5a4a2a','#4a3a20');}
 function shade(hex,k){const n=parseInt(hex.slice(1),16);const f=v=>Math.min(255,Math.round(v*k));return `rgb(${f((n>>16)&255)},${f((n>>8)&255)},${f(n&255)})`;}
 
@@ -108,8 +55,8 @@ function person(x,y,o,t,moving,dx,dy){
   g.fillStyle='rgba(0,0,0,0.25)';g.fillRect(a-0.8,by-h*0.8,1.6,h*0.55);g.restore();
   // arms swing opposite the legs
   g.strokeStyle=shade(o.coat.length===7?o.coat:'#333333',0.72);g.lineWidth=w*0.22;
-  for(const s of [-1,1]){const sw=moving?-s*ph*w*0.35*face:0;g.beginPath();g.moveTo(a+s*w*0.44,by-h*0.77);g.lineTo(a+s*w*0.52+sw,by-h*0.44);g.stroke();
-    g.fillStyle=o.skin||'#6e5646';g.beginPath();g.arc(a+s*w*0.52+sw,by-h*0.42,w*0.1,0,7);g.fill();}
+  for(const s of [-1,1]){const held=o.umbrella&&s===1;const sw=moving&&!held?-s*ph*w*0.35*face:0;const hx=held?a+w*0.62:a+s*w*0.52+sw,hy=held?by-h*0.6:by-h*0.44;g.beginPath();g.moveTo(a+s*w*0.44,by-h*0.77);g.lineTo(hx,hy);g.stroke();
+    g.fillStyle=o.skin||'#6e5646';g.beginPath();g.arc(hx,held?hy:by-h*0.42,w*0.1,0,7);g.fill();}
   g.lineCap='butt';
   g.fillStyle=o.skin||'#6e5646';g.fillRect(a-w*0.1,by-h*0.9,w*0.2,h*0.05);
   g.beginPath();g.arc(a+face*1,by-h*0.96,w*0.33,0,7);g.fill();
@@ -119,57 +66,72 @@ function person(x,y,o,t,moving,dx,dy){
   if(o.hat==='cloche'){g.fillStyle=o.hatCol;g.beginPath();g.ellipse(a,by-h*1.0,w*0.44,w*0.4,0,Math.PI,0);g.fill();g.beginPath();g.ellipse(a,by-h*1.0,w*0.54,w*0.1,0,0,7);g.fill();}
   return by;
 }
-function extras(c,x,y,t,by){const g=A.g,[a]=A.P(x,y,PZ),o=c.look,h=o.h,w=o.w;
-  if(c.id==='harrow'&&t<110){g.fillStyle='#b9ae94';g.fillRect(a-w*0.75,by-h*0.78,w*1.5,h*0.3);g.strokeStyle='rgba(60,50,40,0.6)';g.beginPath();g.moveTo(a,by-h*0.78);g.lineTo(a,by-h*0.48);g.stroke();}
-  if(c.id==='dunn'&&t>=585){const [lx,ly]=[a+w*0.8,by-h*1.15];g.strokeStyle='#15161a';g.lineWidth=2;g.beginPath();g.moveTo(a+w*0.5,by-h*0.8);g.lineTo(lx,ly);g.stroke();g.fillStyle='#6fe08a';g.beginPath();g.arc(lx,ly,4,0,7);g.fill();A.glow(lx,ly,50,'120,255,150',0.55);}
+function extras(c,x,y,t,by,o){const g=A.g,[a]=A.P(x,y,PZ),h=o.h,w=o.w;
+  if(c.id==='harrow'&&t<108){g.fillStyle='#b9ae94';g.fillRect(a-w*0.75,by-h*0.78,w*1.5,h*0.3);g.strokeStyle='rgba(60,50,40,0.6)';g.beginPath();g.moveTo(a,by-h*0.78);g.lineTo(a,by-h*0.48);g.stroke();}
+  if(S.writingNotebook(c.id,t)){g.fillStyle='#e8e0c8';g.fillRect(a-w*0.3,by-h*0.62,w*0.5,h*0.12);}
+  if(S.checkingWatch(c.id,t)){g.fillStyle='#e0b85a';g.beginPath();g.arc(a+w*0.35,by-h*0.6,2.6,0,7);g.fill();A.glow(a+w*0.35,by-h*0.6,10,'255,220,140',0.5);}
+  if(c.id==='dunn'){const pl=S.pole(t);if(pl.where==='hand'){const up=/Reaches up/.test(S.action('dunn',t));g.strokeStyle='#6a5030';g.lineWidth=2;g.beginPath();g.moveTo(a+w*0.5,by-h*0.5);g.lineTo(a+w*(up?0.9:1.4),by-h*(up?2.3:1.25));g.stroke();}
+    const gl=S.greenLamp(t);if(gl.where==='hand'){const [lx,ly]=gl.raised?[a+w*0.8,by-h*1.15]:[a+w*0.6,by-h*0.45];g.strokeStyle='#15161a';g.lineWidth=2;if(gl.raised){g.beginPath();g.moveTo(a+w*0.5,by-h*0.8);g.lineTo(lx,ly);g.stroke();}g.fillStyle='#6fe08a';g.beginPath();g.arc(lx,ly,4,0,7);g.fill();A.glow(lx,ly,gl.raised?50:20,'120,255,150',0.55);}}
+  if(c.id==='tommy'||c.id==='guard'){const gv=S.glove(t);if(gv.where==='hand'&&gv.holder===c.id){g.fillStyle='#8a8f96';g.beginPath();g.ellipse(a+w*0.55,by-h*0.42,3.5,2.2,0,0,7);g.fill();}}
+  if(o.umbrella){// held in the right hand, so the shaft runs beside the head, not across it
+    const ux=a+w*0.62,uy=by-h*1.1,rw=w*1.3,rh=w*0.6;
+    g.strokeStyle='#4a4e56';g.lineWidth=1.6;g.beginPath();g.moveTo(ux,uy);g.lineTo(ux,by-h*0.52);g.stroke();
+    g.fillStyle=o.skin||'#6e5646';g.beginPath();g.arc(ux,by-h*0.6,w*0.1,0,7);g.fill();
+    g.fillStyle='#16181d';g.beginPath();g.ellipse(ux,uy,rw,rh,0,Math.PI,0);g.fill();
+    g.fillStyle='rgba(170,180,200,.14)';g.beginPath();g.ellipse(ux-rw*0.3,uy-rh*0.45,rw*0.45,rh*0.3,0,0,7);g.fill();
+    g.strokeStyle='rgba(165,175,190,.7)';g.lineWidth=1.2;g.beginPath();g.ellipse(ux,uy,rw,rh,0,Math.PI,0);g.stroke();
+    g.beginPath();g.moveTo(ux-rw,uy);g.lineTo(ux+rw,uy);g.stroke();}
 }
-// seated harrow sits lower on the bench
+// props on the ground or leaning
+function props(t){const out=[],g=()=>A.g;
+  const gv=S.glove(t);if(gv.where==='ground') out.push({depth:gv.x+gv.y,draw:()=>{const [a,b]=A.P(gv.x,gv.y,PZ);A.g.fillStyle='#8a8f96';A.g.beginPath();A.g.ellipse(a,b-1,4,2.4,0.3,0,7);A.g.fill();}});
+  const pl=S.pole(t);if(pl.where==='leaning') out.push({depth:pl.x+pl.y,draw:()=>{const [a,b]=A.P(pl.x,pl.y,PZ),[c1,d1]=A.P(pl.x-0.15,pl.y-0.1,PZ+3.0);A.g.strokeStyle='#6a5030';A.g.lineWidth=2;A.g.beginPath();A.g.moveTo(a,b);A.g.lineTo(c1,d1);A.g.stroke();A.g.beginPath();A.g.arc(c1+3,d1,3,Math.PI,0);A.g.stroke();}});
+  const tin=S.lunchTin(t);out.push({depth:tin.x+tin.y+0.95,draw:()=>{A.box(tin.x-0.14,tin.x+0.14,tin.y-0.1,tin.y+0.1,PZ+0.38,PZ+0.52,'#8a8f7a','#5f6454','#4c5044');}});
+  return out;}
 function actors(t){
   const items=[];const tr=trolleyPos(t);
   items.push({depth:tr[0]+tr[1]+1.2,draw:()=>trolley(tr[0],tr[1])});
   for(const k of cases(t)) items.push({depth:k.p[0]+k.p[1]+0.05+(k.p[2]>PZ+0.2?0.9:0),draw:()=>drawCase(k)});
-  for(const c of CHARS){if(!visible(c,t)) continue;const [x,y,mv,,dx,dy]=posOf(c,t);
-    const seated=c.id==='harrow'&&t<118;
-    items.push({depth:x+y+0.3,draw:()=>{const by=person(x,y+(seated?-0.2:0),seated?{...c.look,h:c.look.h*0.82}:c.look,t,mv,dx,dy);extras(c,x,y,t,by);
-      if(window.LTM_STATE&&window.LTM_STATE.follow===c.id){const g=A.g,[a,b]=A.P(x,y,PZ);g.strokeStyle='rgba(233,220,192,0.7)';g.lineWidth=1.5;g.beginPath();g.ellipse(a,b,c.look.w*1.3,c.look.w*0.5,0,0,7);g.stroke();}}});}
+  for(const it of props(t)) items.push(it);
+  for(const c of CHARS){if(!visible(c,t)) continue;const [x,y,mv,,dx,dy]=posOf(c,t);const o=S.look(c.id,t);
+    const seated=c.id==='harrow'&&t<108;
+    items.push({depth:x+y+0.3,draw:()=>{const oo=seated?{...o,h:o.h*0.82}:o;const by=person(x,y+(seated?-0.2:0),oo,t,mv,dx,dy);extras(c,x,y,t,by,oo);
+      if(window.LTM_STATE&&window.LTM_STATE.follow===c.id){const g=A.g,[a,b]=A.P(x,y,PZ);g.strokeStyle='rgba(233,220,192,0.7)';g.lineWidth=1.5;g.beginPath();g.ellipse(a,b,o.w*1.3,o.w*0.5,0,0,7);g.stroke();}}});}
   return items;
 }
 window.LTM_actors=actors;
-window.LTM_clerkIn=t=>t<480;
-window.LTM_positionOf=(id,t)=>{const c=BYID[id];if(!c) return null;const p=posOf(c,t);return [p[0],p[1]];};
-window.LTM_characters={CHARS,posOf,visible,cases,trolleyPos,actionOf:(id,t)=>{const c=BYID[id];if(!visible(c,t)){return t<(c.hiddenBefore||0)?c.route[0][3]:c.route[c.route.length-1][3];}return posOf(c,t)[3];}};
+window.LTM_clerkIn=t=>S.hiddenWhere('dunn',t)==='window';
+window.LTM_positionOf=(id,t)=>BYID[id]?S.pos(id,t):null;
+// What the status line says. It only ever describes what can be seen, so it never gives a secret away.
+const WHERE_TXT={hall:'Out of sight in the booking hall',waiting:'Out of sight in the ladies\u2019 waiting room',window:'Behind the ticket window',street:'Gone out of sight down the street',front:'Aboard the front carriage',rear:'Aboard the rear carriage'};
+function lastSeenLabel(id,t){const iv=S.BYID[id].hidden.find(h=>t>=h[0]&&t<h[1]);return S.label(id,iv&&iv[0]>0?iv[0]-0.01:t);}
+function statusOf(id,t){const w=S.hiddenWhere(id,t);const lab=w&&w!=='window'?lastSeenLabel(id,t):S.label(id,t);
+  if(w&&w!=='window'){const iv=S.BYID[id].hidden.find(h=>t>=h[0]&&t<h[1]);if(iv[0]===0&&t<S.BYID[id].route[0][0]) return {name:lab,text:'Not here yet.'};return {name:lab,text:WHERE_TXT[w]+'.'};}
+  return {name:lab,text:S.action(id,t)+'.'};}
+window.LTM_characters={CHARS,posOf,visible,cases,trolleyPos,statusOf,actionOf:(id,t)=>statusOf(id,t).text};
 
 // ---- following
+// You follow what you can see. If the person goes out of sight, you lose them at the door.
 const followEl=document.getElementById('follow');
-function showFollow(){const st=window.LTM_STATE;if(!st||!st.follow){followEl.style.display='none';return;}const c=BYID[st.follow];
-  followEl.style.display='block';followEl.innerHTML='';const b=document.createElement('b');b.textContent=c.name;followEl.appendChild(b);followEl.appendChild(document.createTextNode(', '+c.desc+'. '+window.LTM_characters.actionOf(c.id,st.t)+'.'));}
-let lastFollowText='';
-window.LTM_afterDraw=st=>{const txt=st.follow?st.follow+'|'+window.LTM_characters.actionOf(st.follow,st.t):'';if(txt!==lastFollowText){lastFollowText=txt;showFollow();}};
-function follow(id){const st=window.LTM_STATE;st.follow=id;st.dirty=true;lastFollowText='';showFollow();}
+function showFollow(){const st=window.LTM_STATE;if(!st||!st.follow){followEl.style.display='none';return;}const s=statusOf(st.follow,st.t);
+  followEl.style.display='block';followEl.innerHTML='';const b=document.createElement('b');b.textContent=s.name;followEl.appendChild(b);followEl.appendChild(document.createTextNode('. '+s.text));
+  if(window.LTM_onFollowShown) window.LTM_onFollowShown(followEl,st);}
+let lastFollowText='',lost=null;
+// When the person you follow goes through a door or aboard, you lose sight of them, as a watcher would.
+function checkLost(st){if(!st.follow) return;const w=S.hiddenWhere(st.follow,st.t);if(w&&w!=='window'){const s=statusOf(st.follow,st.t);lost={t:st.t,name:s.name,text:s.text+' You lose sight of them.'};st.follow=null;st.dirty=true;}}
+function showLost(st){if(lost&&!st.follow&&Math.abs(st.t-lost.t)<6){followEl.style.display='block';followEl.innerHTML='';const b=document.createElement('b');b.textContent=lost.name;followEl.appendChild(b);followEl.appendChild(document.createTextNode('. '+lost.text));return true;}lost=null;return false;}
+window.LTM_afterDraw=st=>{checkLost(st);if(!st.follow){const k='lost|'+(lost?lost.t+lost.text:'')+'|'+(lost&&Math.abs(st.t-lost.t)<6);if(k!==lastFollowText){lastFollowText=k;if(!showLost(st)) followEl.style.display='none';}return;}const s=st.follow?statusOf(st.follow,st.t):null;const txt=s?st.follow+'|'+s.name+'|'+s.text+'|'+(window.LTM_followExtra?window.LTM_followExtra(st):''):'';if(txt!==lastFollowText){lastFollowText=txt;showFollow();}};
+function follow(id){const st=window.LTM_STATE;lost=null;st.follow=id;st.dirty=true;lastFollowText='';showFollow();}
 window.LTM_onFollow=follow;
-window.LTM_onTap=(sx,sy)=>{const st=window.LTM_STATE;let best=null,bd=1e9;
-  for(const c of CHARS){if(!visible(c,st.t)) continue;const p=posOf(c,st.t);const [a,b]=LTM.worldToScreen(p[0],p[1],PZ,st.cam,st.W,st.H);
-    const hh=c.look.h*st.cam.zoom;const cy=b-hh*0.55;const d=Math.hypot((sx-a)/Math.max(18,c.look.w*st.cam.zoom),(sy-cy)/(hh*0.7));if(d<bd){bd=d;best=c;}}
-  follow(best&&bd<1.6?best.id:null);};
+window.LTM_follow=follow;
+function pickPerson(sx,sy){const st=window.LTM_STATE;let best=null,bd=1e9;
+  for(const c of CHARS){if(!visible(c,st.t)) continue;const p=S.pos(c.id,st.t);const o=S.look(c.id,st.t);const [a,b]=LTM.worldToScreen(p[0],p[1],PZ,st.cam,st.W,st.H);
+    const hh=o.h*st.cam.zoom;const cy=b-hh*0.55;const d=Math.hypot((sx-a)/Math.max(18,o.w*st.cam.zoom),(sy-cy)/(hh*0.7));if(d<bd){bd=d;best=c;}}
+  return best&&bd<1.6?best.id:null;}
+window.LTM_pickPerson=pickPerson;
+window.LTM_onTap=(sx,sy)=>{if(window.LTM_onTapClue&&window.LTM_onTapClue(sx,sy)) return;follow(pickPerson(sx,sy));};
 window.LTM_onKey=e=>{const st=window.LTM_STATE;if(e.key==='f'||e.key==='F'){const vis=CHARS.filter(c=>visible(c,st.t));if(!vis.length) return;const i=vis.findIndex(c=>c.id===st.follow);follow(vis[(i+1)%vis.length].id);}
-  else if(e.key==='Escape'){if(document.getElementById('endcard').style.display==='flex') closeEnd();else follow(null);}};
+  else if(e.key==='Escape'){if(window.LTM_answers&&window.LTM_answers.escape()) return;follow(null);}};
 
-// ---- end question
-const endEl=document.getElementById('endcard');let endShown=false;
-const OPTIONS=[['nothing','Nothing out of the ordinary'],['swap','Swapped the two cases, so her case went into the other carriage'],['lost','Left one of the cases behind on the platform'],['harrow','Gave both cases to the man in the grey hat']];
-function openEnd(){endShown=true;endEl.innerHTML='';const card=document.createElement('div');card.className='card';
-  const h2=document.createElement('h2');h2.textContent='10:00 p.m. The train has gone.';card.appendChild(h2);
-  const q=document.createElement('div');q.textContent='What did the porter do with the luggage?';card.appendChild(q);
-  const opts=document.createElement('div');opts.className='opts';for(const [k,label] of OPTIONS){const bt=document.createElement('button');bt.textContent=label;bt.dataset.answer=k;bt.addEventListener('click',()=>answer(k));opts.appendChild(bt);}card.appendChild(opts);
-  const fb=document.createElement('div');fb.id='feedback';fb.setAttribute('aria-live','polite');card.appendChild(fb);
-  const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center';
-  const rb=document.createElement('button');rb.textContent='Watch again from 9:50';rb.id='replay';rb.addEventListener('click',()=>{closeEnd();window.LTM_app.setT(0);});
-  const cb=document.createElement('button');cb.textContent='Keep looking';cb.id='closeend';cb.addEventListener('click',closeEnd);row.appendChild(rb);row.appendChild(cb);card.appendChild(row);
-  endEl.appendChild(card);endEl.style.display='flex';document.body.classList.add('ended');opts.querySelector('button').focus({focusVisible:false});}
-function closeEnd(){endEl.style.display='none';document.body.classList.remove('ended');}
-function answer(k){const fb=document.getElementById('feedback');
-  fb.textContent=k==='swap'?'Yes. Her red-strapped case went into the rear carriage with Mr. Harrow, and his went with her. Now, was it an accident?'
-   :'Not quite. Try watching the porter and his trolley between 9:56 and 9:57.';}
-window.LTM_onTime=t=>{if(t>=600&&!endShown) openEnd();if(t<599) endShown=false;};
-window.LTM_end={openEnd,closeEnd,answer};
+// The 10:00 card, answer screen, hints and ending live in answers.js.
 })();
