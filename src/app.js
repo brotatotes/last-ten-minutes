@@ -5,9 +5,11 @@ const cv=document.getElementById('scene'),ctx=cv.getContext('2d');
 const slider=document.getElementById('time'),clockEl=document.getElementById('clock');
 const playBtn=document.getElementById('play'),speedBtn=document.getElementById('speed');
 const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state={t:0,playing:false,speed:1,cam:{x:11,y:7.4,zoom:1.6},target:null,follow:null,lastFrame:null,dirty:true};
+const state={t:0,playing:false,speed:4,cam:{x:11,y:7.4,zoom:1.6},target:null,follow:null,lastFrame:null,dirty:true};
 window.LTM_STATE=state;
-const SPEEDS=[1,4,16];
+// Playback rates: 1× plays the ten minutes in 2.5 minutes, ¼× is real time for careful watching.
+const SPEEDS=[4,16,1];
+const SPEED_LABEL={4:'1×',16:'4×',1:'¼×'};
 function size(){const dpr=Math.min(window.devicePixelRatio||1,2);const W=cv.clientWidth,H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);state.W=W;state.H=H;state.dpr=dpr;
   state.cam.zoom=clampZoom(state.cam.zoom);
   const bar=document.getElementById('bar');state.cam.oy=bar?Math.round(bar.getBoundingClientRect().height*(H<500?0.75:0.45)):0;state.dirty=true;}
@@ -17,7 +19,7 @@ function setT(t,fromSlider){state.t=Math.max(0,Math.min(LTM.T_END,Math.round(t*1
   if(state.t>=LTM.T_END&&state.playing){setPlaying(false);}
   if(window.LTM_onTime) window.LTM_onTime(state.t);}
 function setPlaying(p){state.playing=p;playBtn.textContent=p?'Pause':'Play';playBtn.setAttribute('aria-pressed',p?'true':'false');state.lastFrame=null;if(p&&state.t>=LTM.T_END) setT(0);}
-function cycleSpeed(){state.speed=SPEEDS[(SPEEDS.indexOf(state.speed)+1)%SPEEDS.length];speedBtn.textContent=state.speed+'×';}
+function cycleSpeed(){state.speed=SPEEDS[(SPEEDS.indexOf(state.speed)+1)%SPEEDS.length];speedBtn.textContent=SPEED_LABEL[state.speed];}
 function step(d){setT(state.t+d);}
 function draw(){
   LTM.render(ctx,{t:state.t,width:state.W,height:state.H,dpr:state.dpr,camera:state.cam,reduced,actors:window.LTM_actors||null,clerkIn:window.LTM_clerkIn?window.LTM_clerkIn(state.t):true});

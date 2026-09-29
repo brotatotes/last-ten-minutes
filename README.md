@@ -7,7 +7,7 @@ A rough prototype. It is ten rainy minutes on a station platform, 9:50 to 10:00 
 The whole scene is a pure function of time, so scrubbing to the same moment always shows exactly the same thing.
 
 ## Controls
-- Drag the slider, or use Play, the speed button, and the −5s and +5s buttons.
+- Drag the slider, or use Play, the speed button, and the −5s and +5s buttons. Speeds are 1× (the ten minutes in two and a half minutes), 4× and ¼× (real time, for watching closely).
 - Keyboard: space plays and pauses, the arrow keys step 5 seconds (shift steps 30), comma and period step 1 second, f follows the next person, Escape stops following, s changes speed, + and − zoom.
 - Mouse or touch: drag to look around, pinch or scroll to zoom, tap a person to follow them.
 

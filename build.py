@@ -7,7 +7,7 @@ from fontTools.ttLib import TTFont
 P = pathlib.Path(__file__).resolve().parent
 SRC, DIST = P / 'src', P / 'dist'
 FONT_DIR = pathlib.Path('/usr/share/fonts/truetype/ebgaramond')  # Debian fonts-ebgaramond; change to wherever EB Garamond 12 TTFs live
-TEXT = ''.join(chr(c) for c in range(32, 127)) + '×−–—‘’“”…é·'
+TEXT = ''.join(chr(c) for c in range(32, 127)) + '×−–—‘’“”…é·¼'
 FACES = [('EBGaramond12-Regular.ttf', 'normal', 400), ('EBGaramond12-Italic.ttf', 'italic', 400), ('EBGaramond12-Bold.ttf', 'normal', 600)]
 
 

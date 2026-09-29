@@ -41,7 +41,7 @@ Mr. Dunn, ticket clerk
 - 0:00 to 8:00 behind the ticket window. 8:00 steps out and walks to the clock, compares his watch. 9:20 walks to the engine and raises a green lamp at 9:45.
 
 ## Controls
-- Slider for the full ten minutes, play and pause, speed 1x, 4x, 16x, step back and forward 5 seconds, zoom in and out.
+- Slider for the full ten minutes, play and pause, speed 1x (ten minutes in 2.5 minutes), 4x and 1/4x (real time), step back and forward 5 seconds, zoom in and out.
 - Keyboard: Space play or pause, Left and Right 5 s, Shift+Left/Right 30 s, comma and period 1 s, F follows the next person, Escape stops following, plus and minus zoom.
 - Mouse and touch: drag the scene to pan, click or tap a person to follow, tap empty ground to stop following, pinch to zoom.
 - Following keeps the camera on the person and shows their name and what they are doing now.
