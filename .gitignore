@@ -1,0 +1,4 @@
+dist/
+shots/
+tests/verify_check.json
+__pycache__/

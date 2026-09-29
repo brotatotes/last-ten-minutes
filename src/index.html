@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The Last Ten Minutes</title>
+<style>
+/*FONTFACE*/
+html,body{margin:0;height:100%;background:#06080c;color:#e9dcc0;font-family:"EB Garamond",Garamond,Georgia,serif;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+body.ended #bar,body.ended #title,body.ended #hint,body.ended #follow{visibility:hidden}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#title{position:fixed;left:18px;top:10px;pointer-events:none;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.8)}
+#title h1{margin:0;font-style:italic;font-weight:400;font-size:clamp(22px,3.2vw,38px)}
+#clock{font-size:clamp(17px,2vw,22px);opacity:.8}
+#bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,rgba(4,5,8,.92),rgba(4,5,8,.55) 70%,rgba(4,5,8,0));display:flex;flex-direction:column;gap:6px}
+#row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+button{font-family:inherit;font-size:18px;color:#e9dcc0;background:rgba(40,46,58,.85);border:1px solid rgba(233,220,192,.35);border-radius:8px;padding:6px 12px;min-width:44px;min-height:40px;cursor:pointer}
+button:focus-visible{outline:2px solid #e8a64e}
+#play{min-width:78px}
+#time{width:100%;accent-color:#b3261e;height:28px;margin:0}
+#ticks{display:flex;justify-content:space-between;font-size:15px;opacity:.7;padding:0 2px}
+#follow{position:fixed;left:50%;transform:translateX(-50%);top:12px;max-width:min(92vw,560px);background:rgba(10,12,18,.82);border:1px solid rgba(233,220,192,.3);border-radius:10px;padding:8px 14px;text-align:center;display:none;font-size:18px}
+#follow b{font-weight:600}
+#hint{position:fixed;right:16px;top:14px;font-size:15px;opacity:.6;text-align:right;pointer-events:none;max-width:40vw}
+#endcard{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,5,8,.72)}
+#endcard .card{box-sizing:border-box;max-height:92vh;overflow-y:auto;margin:0 12px;background:#12161f;border:1px solid rgba(233,220,192,.35);border-radius:12px;padding:20px 22px;max-width:min(92vw,520px);font-size:19px}
+#endcard h2{margin:0 0 10px;font-style:italic;font-weight:400;font-size:26px}
+#endcard .opts{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+#endcard .opts button{text-align:left}
+@media (max-width:600px){#hint{display:none}#follow{top:auto;bottom:130px}button{font-size:17px;padding:6px 10px}}
+@media (max-height:450px){#hint{display:none}#title h1{font-size:20px}#bar{padding:4px 10px}#ticks{display:none}#follow{top:8px;font-size:16px}}
+</style></head>
+<body>
+<canvas id="scene" aria-label="The station platform"></canvas>
+<div id="title"><h1>The Last Ten Minutes</h1><div id="clock">9:50:00 p.m.</div></div>
+<div id="hint">Drag to look around. Tap a person to follow them.<br>Space plays, arrows step.</div>
+<div id="follow" role="status" aria-live="polite"></div>
+<div id="bar">
+  <input id="time" type="range" min="0" max="600" step="0.1" value="0" aria-label="Time from 9:50 to 10:00 p.m.">
+  <div id="ticks"><span>9:50</span><span>9:52</span><span>9:54</span><span>9:56</span><span>9:58</span><span>10:00</span></div>
+  <div id="row">
+    <button id="back" aria-label="Back five seconds">−5s</button>
+    <button id="play" aria-pressed="false">Play</button>
+    <button id="fwd" aria-label="Forward five seconds">+5s</button>
+    <button id="speed" aria-label="Playback speed">1×</button>
+    <button id="zout" aria-label="Zoom out">−</button>
+    <button id="zin" aria-label="Zoom in">+</button>
+  </div>
+</div>
+<div id="endcard" role="dialog" aria-modal="true"></div>
+<script src="scene.js"></script>
+<script src="characters.js"></script>
+<script src="app.js"></script>
+</body></html>
